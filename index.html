@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library Management System</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header id="topbar">
+    <a href="#" class="brand">
+      <span class="logo">📚</span>
+      <span>Library</span>
+    </a>
+    <nav>
+      <a href="#catalog" data-view="catalog" class="active">Catalogue</a>
+      <a href="#about"   data-view="about">About</a>
+      <a href="#dashboard" id="nav-dash" data-view="dashboard" hidden>Dashboard</a>
+    </nav>
+    <div class="auth-box">
+      <span id="who"></span>
+      <button id="login-btn" class="primary">Sign in</button>
+      <button id="logout-btn" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ====================  CATALOGUE  ==================== -->
+    <section id="view-catalog" class="view active">
+      <div class="catalog-hero">
+        <h1>Browse the collection</h1>
+        <p class="lede">Search the shelves. Sign in to borrow.</p>
+      </div>
+      <div class="filters">
+        <input id="f-search" type="search" placeholder="Title, author or ISBN…" />
+        <select id="f-status">
+          <option value="">All</option>
+          <option value="available">Available now</option>
+          <option value="loaned">Currently loaned out</option>
+        </select>
+        <select id="f-sort">
+          <option value="title">Title A→Z</option>
+          <option value="year-desc">Newest first</option>
+          <option value="year-asc">Oldest first</option>
+        </select>
+        <span class="count" id="result-count"></span>
+      </div>
+      <div id="book-grid" class="book-grid"></div>
+    </section>
+
+    <!-- ====================  ABOUT  ==================== -->
+    <section id="view-about" class="view">
+      <h1>About this library</h1>
+      <p>
+        A multi-user library system showing the same Java OOP design from the
+        Computer Programming 2 syllabus — ported to ES2022 so it runs as a
+        static GitHub Pages site.
+      </p>
+      <h2>How it works</h2>
+      <ul>
+        <li><strong>Members</strong> sign in to borrow books, see their active loans and any outstanding fines.</li>
+        <li><strong>Librarians</strong> issue and return loans, register new books and members.</li>
+        <li><strong>Admins</strong> do everything: manage staff, run reports, export the catalogue as CSV.</li>
+      </ul>
+      <h2>Loan rules</h2>
+      <ul>
+        <li>Standard loan period: <strong>14 days</strong>.</li>
+        <li>Overdue fine: <strong>$0.25 per day</strong>, computed automatically on return.</li>
+        <li>A book cannot be loaned if no copies are available.</li>
+      </ul>
+      <h2>Demo accounts</h2>
+      <table class="demo">
+        <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
+        <tbody>
+          <tr><td>Admin</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+          <tr><td>Librarian</td><td><code>librarian</code></td><td><code>lib123</code></td></tr>
+          <tr><td>Member</td><td><code>member</code></td><td><code>mem123</code></td></tr>
+        </tbody>
+      </table>
+      <h2>Java OOP concepts implemented</h2>
+      <ul>
+        <li><strong>Encapsulation</strong> — private <code>#</code> fields with validated setters.</li>
+        <li><strong>Inheritance</strong> — abstract <code>User</code> extended by <code>Admin</code> / <code>Librarian</code> / <code>Member</code>.</li>
+        <li><strong>Polymorphism</strong> — <code>describePermissions()</code> overridden in every subclass.</li>
+        <li><strong>Abstraction / interfaces</strong> — generic <code>Persistable&lt;T&gt;</code> DAO contract.</li>
+        <li><strong>Exception hierarchy</strong> — <code>LibraryException</code> → <code>Authentication</code>, <code>BookNotAvailable</code>, <code>Validation</code>, <code>NotFound</code>.</li>
+        <li><strong>File I/O</strong> — RFC-4180-aware CSV import / export.</li>
+        <li><strong>Multi-user with auth + authorisation</strong> — role-based dashboards, <code>requireAction()</code> guards.</li>
+      </ul>
+    </section>
+
+    <!-- ====================  DASHBOARD  ==================== -->
+    <section id="view-dashboard" class="view">
+      <div id="dash-header"></div>
+      <div id="dash-body"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Library Management System — static SPA over a JavaScript port of the syllabus' Java OOP design.</p>
+  </footer>
+
+  <div id="modal-root" hidden>
+    <div class="modal-backdrop"></div>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button id="modal-close" aria-label="Close">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast-root"></div>
+
+  <script src="js/exceptions.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/dao.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
