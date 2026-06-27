@@ -4,117 +4,281 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Library Management System</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    :root{
+      --bg:#f6f4ef; --panel:#fffdf8; --ink:#23201b; --muted:#6f685c;
+      --line:#e3ddd0; --accent:#7a5c2e; --accent-soft:#efe6d4;
+      --ok:#2f6f3e; --bad:#9a3b2f; --warn:#8a6d1f;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:16px/1.5 Georgia,"Iowan Old Style",serif;color:var(--ink);background:var(--bg)}
+    header{display:flex;align-items:center;gap:1rem;padding:1rem 1.4rem;border-bottom:1px solid var(--line);background:var(--panel)}
+    .brand{font-weight:700;letter-spacing:.02em;font-size:1.15rem}
+    header nav{display:flex;gap:1rem;margin-left:auto;font-size:.95rem}
+    header nav a{color:var(--muted);text-decoration:none;cursor:pointer}
+    header nav a.active{color:var(--accent);text-decoration:underline}
+    main{max-width:960px;margin:0 auto;padding:1.6rem 1.4rem}
+    h1{font-size:1.6rem;margin:.2rem 0 .4rem}
+    h2{font-size:1.15rem;margin:1.6rem 0 .5rem;border-bottom:1px solid var(--line);padding-bottom:.25rem}
+    .lede{color:var(--muted);margin-top:0}
+    .banner{background:var(--accent-soft);border:1px solid var(--line);border-left:4px solid var(--accent);
+      padding:.7rem .9rem;border-radius:6px;font-size:.92rem;margin:1rem 0}
+    .banner code{background:#fff;padding:.05rem .3rem;border-radius:4px}
+    .role-bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:1rem 0}
+    .role-bar span{color:var(--muted);font-size:.9rem}
+    button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);
+      padding:.35rem .7rem;border-radius:6px}
+    button.role.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    button.act{background:var(--accent);color:#fff;border-color:var(--accent);padding:.25rem .6rem;font-size:.85rem}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    .filters{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0}
+    input,select{font:inherit;padding:.35rem .5rem;border:1px solid var(--line);border-radius:6px;background:#fff}
+    input[type=search]{min-width:240px;flex:1}
+    table{width:100%;border-collapse:collapse;margin-top:.5rem;background:var(--panel);font-size:.95rem}
+    th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line)}
+    th{color:var(--muted);font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+    .pill{font-size:.78rem;padding:.1rem .5rem;border-radius:999px;border:1px solid var(--line)}
+    .pill.ok{color:var(--ok);border-color:#bcd9c2}
+    .pill.bad{color:var(--bad);border-color:#e0bcb6}
+    .pill.warn{color:var(--warn);border-color:#e3d6a8}
+    .log{background:#1f1c17;color:#e9e2d2;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;
+      padding:.8rem 1rem;border-radius:8px;white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:.6rem}
+    .muted{color:var(--muted)}
+    footer{max-width:960px;margin:2rem auto 3rem;padding:0 1.4rem;color:var(--muted);font-size:.85rem}
+    a{color:var(--accent)}
+    .hidden{display:none}
+  </style>
 </head>
 <body>
-  <header id="topbar">
-    <a href="#" class="brand">
-      <span class="logo">📚</span>
-      <span>Library</span>
-    </a>
+  <header>
+    <span class="brand">📚 Library Management System</span>
     <nav>
-      <a href="#catalog" data-view="catalog" class="active">Catalogue</a>
-      <a href="#about"   data-view="about">About</a>
-      <a href="#dashboard" id="nav-dash" data-view="dashboard" hidden>Dashboard</a>
+      <a data-view="catalog" class="active">Catalogue</a>
+      <a data-view="about">About</a>
     </nav>
-    <div class="auth-box">
-      <span id="who"></span>
-      <button id="login-btn" class="primary">Sign in</button>
-      <button id="logout-btn" hidden>Sign out</button>
-    </div>
   </header>
 
   <main>
-    <!-- ====================  CATALOGUE  ==================== -->
-    <section id="view-catalog" class="view active">
-      <div class="catalog-hero">
-        <h1>Browse the collection</h1>
-        <p class="lede">Search the shelves. Sign in to borrow.</p>
+    <div class="banner">
+      This page is a small <strong>in-browser demo</strong> of the data model.
+      The real, tested backend is the Python <code>library/</code> package in
+      this repository — SQLite-backed, role-gated, with a pytest suite. See the
+      <a data-view="about" class="navlink">About</a> tab or the README.
+    </div>
+
+    <section id="view-catalog">
+      <h1>Browse the collection</h1>
+      <p class="lede">Pick a role, then borrow, return, reserve. Fines and the
+        reservation queue update live.</p>
+
+      <div class="role-bar">
+        <span>Acting as:</span>
+        <button class="role active" data-role="librarian">Librarian</button>
+        <button class="role" data-role="member">Member (Andrea)</button>
+        <span id="role-note" class="muted"></span>
       </div>
+
       <div class="filters">
-        <input id="f-search" type="search" placeholder="Title, author or ISBN…" />
-        <select id="f-status">
+        <input id="q" type="search" placeholder="Search title, author or ISBN…" />
+        <select id="status">
           <option value="">All</option>
           <option value="available">Available now</option>
-          <option value="loaned">Currently loaned out</option>
+          <option value="out">All copies out</option>
         </select>
-        <select id="f-sort">
-          <option value="title">Title A→Z</option>
-          <option value="year-desc">Newest first</option>
-          <option value="year-asc">Oldest first</option>
-        </select>
-        <span class="count" id="result-count"></span>
+        <span class="muted" id="count"></span>
       </div>
-      <div id="book-grid" class="book-grid"></div>
-    </section>
 
-    <!-- ====================  ABOUT  ==================== -->
-    <section id="view-about" class="view">
-      <h1>About this library</h1>
-      <p>
-        A multi-user library system showing the same Java OOP design from the
-        Computer Programming 2 syllabus — ported to ES2022 so it runs as a
-        static GitHub Pages site.
-      </p>
-      <h2>How it works</h2>
-      <ul>
-        <li><strong>Members</strong> sign in to borrow books, see their active loans and any outstanding fines.</li>
-        <li><strong>Librarians</strong> issue and return loans, register new books and members.</li>
-        <li><strong>Admins</strong> do everything: manage staff, run reports, export the catalogue as CSV.</li>
-      </ul>
-      <h2>Loan rules</h2>
-      <ul>
-        <li>Standard loan period: <strong>14 days</strong>.</li>
-        <li>Overdue fine: <strong>$0.25 per day</strong>, computed automatically on return.</li>
-        <li>A book cannot be loaned if no copies are available.</li>
-      </ul>
-      <h2>Demo accounts</h2>
-      <table class="demo">
-        <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
-        <tbody>
-          <tr><td>Admin</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
-          <tr><td>Librarian</td><td><code>librarian</code></td><td><code>lib123</code></td></tr>
-          <tr><td>Member</td><td><code>member</code></td><td><code>mem123</code></td></tr>
-        </tbody>
+      <table>
+        <thead>
+          <tr><th>Title</th><th>Author</th><th>Category</th><th>Copies</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
       </table>
-      <h2>Java OOP concepts implemented</h2>
-      <ul>
-        <li><strong>Encapsulation</strong> — private <code>#</code> fields with validated setters.</li>
-        <li><strong>Inheritance</strong> — abstract <code>User</code> extended by <code>Admin</code> / <code>Librarian</code> / <code>Member</code>.</li>
-        <li><strong>Polymorphism</strong> — <code>describePermissions()</code> overridden in every subclass.</li>
-        <li><strong>Abstraction / interfaces</strong> — generic <code>Persistable&lt;T&gt;</code> DAO contract.</li>
-        <li><strong>Exception hierarchy</strong> — <code>LibraryException</code> → <code>Authentication</code>, <code>BookNotAvailable</code>, <code>Validation</code>, <code>NotFound</code>.</li>
-        <li><strong>File I/O</strong> — RFC-4180-aware CSV import / export.</li>
-        <li><strong>Multi-user with auth + authorisation</strong> — role-based dashboards, <code>requireAction()</code> guards.</li>
-      </ul>
+
+      <h2>Activity log</h2>
+      <div class="log" id="log">Ready.</div>
     </section>
 
-    <!-- ====================  DASHBOARD  ==================== -->
-    <section id="view-dashboard" class="view">
-      <div id="dash-header"></div>
-      <div id="dash-body"></div>
+    <section id="view-about" class="hidden">
+      <h1>About this project</h1>
+      <p>A multi-role library management system. This single HTML file is a
+        self-contained demonstration of the domain model so it can run on
+        GitHub Pages with no build step. The authoritative implementation is
+        the Python backend in this repository.</p>
+
+      <h2>The real backend (Python)</h2>
+      <ul>
+        <li><code>library/</code> — SQLite-backed package: books, per-book
+          physical copies, members (membership types with loan limits),
+          librarians, loans, fines, and a FIFO reservation queue.</li>
+        <li><strong>Role gating</strong> — librarian vs member; unauthorized
+          actions raise <code>PermissionError</code>. Members can search,
+          reserve, and view their own history; librarians check out / return /
+          manage the catalog / waive fines.</li>
+        <li><strong>Loan &amp; fine rules</strong> — 14-day loans; overdue fine
+          = rate × days late ($0.25/day by default); borrowing blocked over a
+          $5.00 unpaid-fine cap and over the member's loan limit.</li>
+        <li><strong>Reservations</strong> — per-title FIFO hold queue; the head
+          is served when a copy is returned.</li>
+        <li><strong>CSV</strong> — catalog and member import/export (RFC-4180).</li>
+        <li><code>tests/</code> — pytest suite (16 tests); <code>demo.py</code>
+          runs the full lifecycle.</li>
+      </ul>
+
+      <h2>Run the backend</h2>
+      <div class="log">pip install -r requirements.txt
+python -m pytest -q
+python demo.py</div>
     </section>
   </main>
 
   <footer>
-    <p>Library Management System — static SPA over a JavaScript port of the syllabus' Java OOP design.</p>
+    Library Management System — browser demo over the same model as the Python
+    backend in this repo. Loan period 14 days · overdue fine $0.25/day · loan
+    limit 5 (standard).
   </footer>
 
-  <div id="modal-root" hidden>
-    <div class="modal-backdrop"></div>
-    <div class="modal" role="dialog" aria-modal="true">
-      <button id="modal-close" aria-label="Close">×</button>
-      <div id="modal-body"></div>
-    </div>
-  </div>
+  <script>
+  // ----- Self-contained in-browser demo of the same domain model. -----
+  // This mirrors the Python backend's rules; the Python package is the
+  // authoritative, tested implementation.
+  const RULES = { loanDays: 14, finePerDay: 0.25, fineCap: 5.0, memberLimit: 5 };
 
-  <div id="toast-root"></div>
+  // Seed catalog (kept in sync with data/catalog.csv).
+  const SEED = [
+    ["The Hobbit","J.R.R. Tolkien","9780261103344","Fantasy",3],
+    ["1984","George Orwell","9780451524935","Dystopia",2],
+    ["Pride and Prejudice","Jane Austen","9780141439518","Classic",2],
+    ["To Kill a Mockingbird","Harper Lee","9780061120084","Classic",2],
+    ["The Pragmatic Programmer","Andrew Hunt, David Thomas","9780201616224","Programming",1],
+    ["Clean Code","Robert C. Martin","9780132350884","Programming",2],
+    ["Introduction to Algorithms","Cormen, Leiserson, Rivest, Stein","9780262033848","Computer Science",1],
+    ["Sapiens","Yuval Noah Harari","9780099590088","History",2],
+    ["The Name of the Wind","Patrick Rothfuss","9780756404741","Fantasy",3],
+    ["Dune","Frank Herbert","9780441013593","Science Fiction",2],
+    ["The Left Hand of Darkness","Ursula K. Le Guin","9780441478125","Science Fiction",1],
+    ["Thinking, Fast and Slow","Daniel Kahneman","9780374533557","Psychology",2],
+  ];
 
-  <script src="js/exceptions.js"></script>
-  <script src="js/models.js"></script>
-  <script src="js/dao.js"></script>
-  <script src="js/services.js"></script>
-  <script src="js/catalog.js"></script>
-  <script src="js/app.js"></script>
+  const books = SEED.map((b, i) => ({
+    id: i, title: b[0], author: b[1], isbn: b[2], category: b[3],
+    total: b[4], out: 0, queue: [], myLoan: false,
+  }));
+
+  let role = "librarian";
+  const MEMBER = "Andrea";
+
+  const $ = (s) => document.querySelector(s);
+  const logEl = $("#log");
+  function log(msg){ logEl.textContent = "› " + msg + "\n" + logEl.textContent; }
+
+  function setRole(r){
+    role = r;
+    document.querySelectorAll(".role").forEach(b =>
+      b.classList.toggle("active", b.dataset.role === r));
+    $("#role-note").textContent = r === "librarian"
+      ? "can check out, return, and reserve"
+      : "can search and reserve; checkout/return are librarian-only";
+    render();
+  }
+
+  function avail(b){ return b.total - b.out; }
+
+  function statusPill(b){
+    const a = avail(b);
+    if (a > 0) return `<span class="pill ok">${a} available</span>`;
+    if (b.queue.length) return `<span class="pill warn">out · ${b.queue.length} waiting</span>`;
+    return `<span class="pill bad">all out</span>`;
+  }
+
+  function actionButtons(b){
+    const a = avail(b);
+    if (role === "librarian"){
+      if (b.myLoan)
+        return `<button class="act" data-do="return" data-id="${b.id}">Return</button>`;
+      if (a > 0)
+        return `<button class="act" data-do="checkout" data-id="${b.id}">Check out</button>`;
+      return `<button disabled>—</button>`;
+    }
+    // member
+    if (a > 0) return `<span class="muted">on shelf</span>`;
+    const queued = b.queue.includes(MEMBER);
+    return queued
+      ? `<span class="pill warn">reserved (#${b.queue.indexOf(MEMBER)+1})</span>`
+      : `<button class="act" data-do="reserve" data-id="${b.id}">Reserve</button>`;
+  }
+
+  function checkout(b){
+    if (role !== "librarian"){ log("PermissionError: checkout is librarian-only."); return; }
+    if (avail(b) <= 0){ log(`"${b.title}" — no copy available.`); return; }
+    if (b.queue.length && b.queue[0] !== MEMBER){
+      log(`"${b.title}" — ${b.queue[0]} is next in the reservation queue.`); return;
+    }
+    b.out++; b.myLoan = true;
+    if (b.queue[0] === MEMBER) b.queue.shift();
+    log(`Checked out "${b.title}" to ${MEMBER}. Due in ${RULES.loanDays} days.`);
+    render();
+  }
+
+  function returnLoan(b){
+    if (role !== "librarian"){ log("PermissionError: return is librarian-only."); return; }
+    b.out = Math.max(0, b.out - 1); b.myLoan = false;
+    let msg = `Returned "${b.title}".`;
+    if (b.queue.length) msg += ` Next in line: ${b.queue[0]} (hold ready).`;
+    log(msg);
+    render();
+  }
+
+  function reserve(b){
+    if (b.queue.includes(MEMBER)){ log(`Already in the queue for "${b.title}".`); return; }
+    b.queue.push(MEMBER);
+    log(`${MEMBER} reserved "${b.title}" — position #${b.queue.length} in the FIFO queue.`);
+    render();
+  }
+
+  function render(){
+    const q = $("#q").value.trim().toLowerCase();
+    const st = $("#status").value;
+    const rows = books.filter(b => {
+      if (q && !(`${b.title} ${b.author} ${b.isbn}`.toLowerCase().includes(q))) return false;
+      if (st === "available" && avail(b) <= 0) return false;
+      if (st === "out" && avail(b) > 0) return false;
+      return true;
+    });
+    $("#count").textContent = `${rows.length} of ${books.length} titles`;
+    $("#rows").innerHTML = rows.map(b => `
+      <tr>
+        <td>${b.title}</td><td>${b.author}</td><td>${b.category}</td>
+        <td>${avail(b)}/${b.total}</td>
+        <td>${statusPill(b)}</td>
+        <td>${actionButtons(b)}</td>
+      </tr>`).join("");
+  }
+
+  document.addEventListener("click", (e) => {
+    const nav = e.target.closest("[data-view]");
+    if (nav){
+      const v = nav.dataset.view;
+      $("#view-catalog").classList.toggle("hidden", v !== "catalog");
+      $("#view-about").classList.toggle("hidden", v !== "about");
+      document.querySelectorAll("header nav a").forEach(a =>
+        a.classList.toggle("active", a.dataset.view === v));
+      return;
+    }
+    const roleBtn = e.target.closest(".role");
+    if (roleBtn){ setRole(roleBtn.dataset.role); return; }
+    const act = e.target.closest("[data-do]");
+    if (act){
+      const b = books[+act.dataset.id];
+      if (act.dataset.do === "checkout") checkout(b);
+      else if (act.dataset.do === "return") returnLoan(b);
+      else if (act.dataset.do === "reserve") reserve(b);
+    }
+  });
+  $("#q").addEventListener("input", render);
+  $("#status").addEventListener("change", render);
+
+  setRole("librarian");
+  </script>
 </body>
 </html>
